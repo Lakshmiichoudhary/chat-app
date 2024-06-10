@@ -1,0 +1,1 @@
+export const image = "https://static.vecteezy.com/system/resources/previews/007/166/547/original/3d-chat-application-logo-background-social-media-free-vector.jpg"
