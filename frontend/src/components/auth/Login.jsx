@@ -1,13 +1,41 @@
+import { IconButton } from '@chakra-ui/react'
 import React, { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons"
 
 const Login = () => {
     const emailRef = useRef(null)
     const passwordRef = useRef(null)
     const [isError, setIsError] = useState("")
+    const [show,setShow] = useState(false)
+    const navigate = useNavigate()
 
     const handleLogin = async() => {
+      const email = emailRef.current.value; 
+        const password = passwordRef.current.value; 
 
+        try {
+            const response = await fetch("http://localhost:5000/user/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password }) 
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || "Login failed");
+            }
+
+            //console.log("Received token:", data.token); 
+            localStorage.setItem('token', data.token); 
+            //console.log("Token stored successfully:", data.token);
+            navigate("/chat");
+        } catch (error) {
+            console.error("Login error:", error);
+            setIsError(error.message);
+        }
     }
 
   return (
@@ -20,10 +48,19 @@ const Login = () => {
           type='email'
           placeholder='xyz@gmail.com'
           ref={emailRef} />
+        <div className='flex'>
         <input className='w-full p-3 my-2 outline-none bg-gray-200'
-          type='password'
+          type={!show ? 'password' : "text"}
           placeholder='*********'
           ref={passwordRef} />
+          <IconButton
+          className='my-3 p-6'
+          colorScheme='blue' 
+          aria-label='Search database'
+          icon={!show ? <ViewIcon /> : <ViewOffIcon />}
+          onClick={()=> setShow(!show)}
+          />
+          </div>
         <p className='p-2 text-red-700 font-semibold'>{isError}</p>
         <button className='p-3 bg-cyan-600 w-full text-white rounded-md mt-4 hover:bg-cyan-700' onClick={handleLogin}>
           Login

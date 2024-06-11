@@ -1,26 +1,106 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Validaion } from '../../utils/Validation';
+import { Avatar, AvatarBadge, IconButton, useToast, Button } from '@chakra-ui/react';
+import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
+import handleValidaion from '../../utils/Validation';
 
 const Signup = () => {
-    const [isError, setIsError] = useState(null);
-    const name = useRef(null);
-    const email = useRef(null);
-    const password = useRef(null);
-    const navigate = useNavigate();
+  const [isError, setIsError] = useState(null);
+  const [avatar, setAvatar] = useState(null);
+  const name = useRef(null);
+  const email = useRef(null);
+  const password = useRef(null);
+  const fileInputRef = useRef(null);
+  const navigate = useNavigate();
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
-    const handleSignup = async() => {
-        const message = Validaion(
-            name.current.value,
-            email.current.value,
-            password.current.value
-          );
-          //console.log(message)
-          setIsError(message);
-      
-          if (message) return;
+  const handleSignup = async () => {
+    const message = handleValidaion(
+      name.current.value,
+      email.current.value,
+      password.current.value
+    );
+    setIsError(message);
 
+    if (message) return;
+
+    try {
+      const response = await fetch("http://localhost:5000/user/signup", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.current.value,
+          email: email.current.value,
+          password: password.current.value,
+          pic: avatar
+        })
+      });
+
+      if (!response.ok) {
+        const errordata = await response.json();
+        //console.error("Error response:", errordata);
+        setIsError(errordata.message);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Signup successful:", data);
+      localStorage.setItem('token', data.token);
+      console.log("token",data.token)
+      navigate("/chat");
+    } catch (error) {
+      console.error("Unexpected error occurred:", error); 
+      setIsError('An unexpected error occurred. Please try again later.');
     }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setLoading(true);
+      if (file.type === 'image/jpeg' || file.type === 'image/png') {
+        const data = new FormData();
+        data.append('file', file);
+        data.append('upload_preset', 'chat-app');
+        data.append('cloud_name', 'dhzfruq0g');
+
+        try {
+          const response = await fetch('https://api.cloudinary.com/v1_1/dhzfruq0g/image/upload', {
+            method: 'POST',
+            body: data,
+          });
+          const result = await response.json();
+          setAvatar(result.url);
+          setLoading(false);
+        } catch (error) {
+          toast({
+            title: 'Error uploading image.',
+            description: 'Please try again.',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+            position: 'bottom',
+          });
+          setLoading(false);
+        }
+      } else {
+        toast({
+          title: 'Please select a valid image file.',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+          position: 'bottom',
+        });
+        setLoading(false);
+      }
+    }
+  };
 
   return (
     <div className='lg:flex md:flex h-screen'>
@@ -33,19 +113,42 @@ const Signup = () => {
       </div>
       <div className='lg:w-6/12 p-2 font-bold'>
         <form className='p-2 m-4 lg:mx-28 lg:my-24 border-4 shadow-2xl from-cyan-800' onSubmit={e => e.preventDefault()}>
+          <div className='flex justify-center mb-4' onClick={handleAvatarClick}>
+            <Avatar size='xl' src={avatar}>
+              <AvatarBadge boxSize='1.25em' bg='green.500' />
+            </Avatar>
+          </div>
+          <input
+            type='file'
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            accept='image/*'
+            onChange={handleFileChange}
+          />
           <h1 className='p-2 mx-3 text-center font-semibold text-2xl text-cyan-700'>Signup</h1>
           <input className='w-full p-3 my-2 outline-none bg-gray-200' type='text' placeholder='Name' ref={name} />
           <input className='w-full p-3 my-2 outline-none bg-gray-200' type='email' placeholder='xyz@gmail.com' ref={email} />
-          <input className='w-full p-3 my-2 outline-none bg-gray-200' type='password' placeholder='*********' ref={password} />
+          <div className='flex'>
+            <input className='w-full p-3 my-2 outline-none bg-gray-200'
+              type={!show ? 'password' : 'text'}
+              placeholder='*********'
+              ref={password} />
+            <IconButton
+              className='my-2 p-3'
+              colorScheme='blue'
+              aria-label='Toggle password visibility'
+              icon={!show ? <ViewIcon /> : <ViewOffIcon />}
+              onClick={() => setShow(!show)}
+            />
+          </div>
           <p className='p-2 text-red-700 font-semibold'>{isError}</p>
-          <button className='p-3 bg-cyan-500 w-full text-white rounded-md mt-4' onClick={handleSignup}>
+          <Button colorScheme='cyan' textColor={'white'} w='100%' p='6' isLoading={loading} onClick={handleSignup}>
             Signup
-          </button>
+          </Button>
         </form>
       </div>
     </div>
   );
 };
 
-
-export default Signup
+export default Signup;

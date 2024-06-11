@@ -1,4 +1,4 @@
-export const Validaion = (name,email,phoneNo,password) => {
+const handleValidaion = (name,email,phoneNo,password) => {
     if(!name || !email || !phoneNo ){
         return "All Fields Are Require"
     }
@@ -17,3 +17,5 @@ export const Validaion = (name,email,phoneNo,password) => {
     return null;
 
 }
+
+export default handleValidaion;
