@@ -66,3 +66,22 @@ exports.signUser = async (req,res) => {
         res.status(404).json({ message: "User not found" });
     }
 }
+
+exports.getUser = async (req,res) => {
+    try {
+        const keyword = req.query.search
+            ? {
+                $or: [
+                    { name: { $regex: req.query.search, $options: "i" } },
+                    { email: { $regex: req.query.search, $options: "i" } }
+                ]
+            }
+            : {};
+
+        const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
+        res.send(users);
+    } catch (err) {
+        console.error("Error fetching users:", err);
+        res.status(500).json({ message: "Failed to fetch users" });
+    }
+}
