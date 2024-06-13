@@ -1,51 +1,51 @@
 const Chat = require("../models/chatModel")
 const User = require("../models/userModel")
 
-exports.postChat = async(req,res) => {
+exports.postChat = async (req, res) => {
     try {
-        const { userId } = req.body;
-
-        if (!userId) {
-            return res.sendStatus(400);
-        }
-
-        let isChat = await Chat.find({
-            isGroupChat: false,
-            $and: [
-                { users: { $elemMatch: { $eq: req.user.id } } },
-                { users: { $elemMatch: { $eq: userId } } }
-            ],
-        })
-        .populate("users", "-password") 
+      const { userId } = req.body;
+  
+      if (!userId) {
+        return res.sendStatus(400);
+      }
+  
+      let isChat = await Chat.find({
+        isGroupChat: false,
+        $and: [
+          { users: { $elemMatch: { $eq: req.user.id } } },
+          { users: { $elemMatch: { $eq: userId } } }
+        ],
+      })
+        .populate("users", "-password")
         .populate("latestMessage");
-
-        isChat = await User.populate(isChat, {
-            path: "latestMessage.sender",
-            select: "name pic email",
-        });
-
-        if (isChat.length > 0) {
-            return res.send(isChat[0]);
-        } else {
-            const chatData = {
-                chatName: "sender",
-                isGroupChat: false,
-                users: [req.user.id, userId]
-            };
-
-            const createdChat = await Chat.create(chatData);
-
-            const fullChat = await Chat.findOne({ _id: createdChat._id })
-                .populate("users", "-password")
-                .populate("latestMessage");
-
-            return res.status(201).send(fullChat);
-        }
+  
+      isChat = await User.populate(isChat, {
+        path: "latestMessage.sender",
+        select: "name pic email",
+      });
+  
+      if (isChat.length > 0) {
+        return res.send(isChat[0]);
+      } else {
+        const chatData = {
+          chatName: "sender",
+          isGroupChat: false,
+          users: [req.user.id, userId]
+        };
+  
+        const createdChat = await Chat.create(chatData);
+  
+        const fullChat = await Chat.findOne({ _id: createdChat._id })
+          .populate("users", "-password")
+          .populate("latestMessage");
+  
+        return res.status(201).send(fullChat);
+      }
     } catch (err) {
-        console.error("Error in postChat:", err);
-        res.status(500).json({ message: "Failed to create or find chat" });
+      console.error("Error in postChat:", err);
+      res.status(500).json({ message: "Failed to create or find chat" });
     }
-}
+};
 
 exports.getChat = async (req, res) => {
     try {

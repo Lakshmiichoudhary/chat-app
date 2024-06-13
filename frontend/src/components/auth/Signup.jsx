@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarBadge, IconButton, useToast, Button } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
-import handleValidaion from '../../utils/Validation';
+import handleValidation from '../../utils/Validation';
+import { ChatState } from '../../context/ChatProvider';
 
 const Signup = () => {
   const [isError, setIsError] = useState(null);
@@ -15,9 +16,10 @@ const Signup = () => {
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const { setUser } = ChatState();
 
   const handleSignup = async () => {
-    const message = handleValidaion(
+    const message = handleValidation(
       name.current.value,
       email.current.value,
       password.current.value
@@ -27,6 +29,7 @@ const Signup = () => {
     if (message) return;
 
     try {
+      setLoading(true);
       const response = await fetch("http://localhost:5000/user/signup", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,20 +41,19 @@ const Signup = () => {
         })
       });
 
+      const data = await response.json();
+      setLoading(false);
+
       if (!response.ok) {
-        const errordata = await response.json();
-        //console.error("Error response:", errordata);
-        setIsError(errordata.message);
+        setIsError(data.message);
         return;
       }
 
-      const data = await response.json();
-      console.log("Signup successful:", data);
-      localStorage.setItem('token', data.token);
-      console.log("token",data.token)
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      setUser(data);
       navigate("/chat");
     } catch (error) {
-      console.error("Unexpected error occurred:", error); 
+      setLoading(false);
       setIsError('An unexpected error occurred. Please try again later.');
     }
   };
@@ -77,7 +79,6 @@ const Signup = () => {
           });
           const result = await response.json();
           setAvatar(result.url);
-          setLoading(false);
         } catch (error) {
           toast({
             title: 'Error uploading image.',
@@ -87,6 +88,7 @@ const Signup = () => {
             isClosable: true,
             position: 'bottom',
           });
+        } finally {
           setLoading(false);
         }
       } else {

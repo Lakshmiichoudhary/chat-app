@@ -5,7 +5,7 @@ const cors = require("cors")
 
 //routes
 const userRoute = require("./router/userRoute")
-const chatRoute = require("./router/userRoute")
+const chatRoute = require("./router/chatRoute")
 
 require("dotenv").config();
 connectDB();

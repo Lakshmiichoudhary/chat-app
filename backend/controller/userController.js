@@ -24,23 +24,30 @@ exports.registerUser = async (req,res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, salt);
-        const newUser = await User.create({
+        const user = await User.create({
             name,
             email,
             password: hashedPassword,
             pic
         });
 
-        const token = generateToken(newUser.id);
-        //console.log("user created" ,token)
-        return res.status(201).json({ message: "User created", token });
+        if (user) {
+            res.status(201).json({
+              _id: user._id,
+              name: user.name,
+              email: user.email,
+              isAdmin: user.isAdmin,
+              pic: user.pic,
+              token: generateToken(user._id),
+            });
+        }
     } catch (err) {
         console.error("Error during signup:", err);
         return res.status(500).json({ message: "Failed to create a user" });
     }        
 } 
 
-exports.signUser = async (req,res) => {
+exports.signinUser = async (req,res) => {
     try {
         const { email, password } = req.body;
 
@@ -58,30 +65,30 @@ exports.signUser = async (req,res) => {
             return res.status(401).json({ message: "wrong password" });
         }
 
-        const token = generateToken(user.id);
-        //console.log("Login successful, token:", token);
-        return res.status(200).json({ message: "Login successful", token });
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isAdmin: user.isAdmin,
+            pic: user.pic,
+            token: generateToken(user._id),
+          });  
     } catch (err) {
         console.error("Error during login:", err);
         res.status(404).json({ message: "User not found" });
     }
 }
 
-exports.getUser = async (req,res) => {
-    try {
-        const keyword = req.query.search
-            ? {
-                $or: [
-                    { name: { $regex: req.query.search, $options: "i" } },
-                    { email: { $regex: req.query.search, $options: "i" } }
-                ]
-            }
-            : {};
+exports.getUser = async (req, res) => {
+    const keyword = req.query.search
+    ? {
+        $or: [
+          { name: { $regex: req.query.search, $options: "i" } },
+          { email: { $regex: req.query.search, $options: "i" } },
+        ],
+      }
+    : {};
 
-        const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
-        res.send(users);
-    } catch (err) {
-        console.error("Error fetching users:", err);
-        res.status(500).json({ message: "Failed to fetch users" });
-    }
+  const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
+  res.send(users);
 }
