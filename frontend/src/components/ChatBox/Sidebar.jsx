@@ -17,7 +17,7 @@ const Sidebar = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
 
-    console.log('Sidebar user:', user); 
+    //console.log('Sidebar user:', user); 
 
     const logoutHandler = () => {
         localStorage.removeItem('userInfo');

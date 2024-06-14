@@ -4,46 +4,44 @@ import { Box, Button, Stack, Text, useToast } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import Loading from '../../utils/Loading';
 import { getSender } from '../../utils/ChatLogic';
+import GroupChat from './GroupChat';
 
-const Chats = () => {
-    const [loggedUser, setLoggedUser] = useState();
-    const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
-    const toast = useToast();
+const Chats = ({fetchAgain}) => {
+  const [loggedUser, setLoggedUser] = useState();
+  const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
+  const toast = useToast();
 
-    const fetchChats = async () => {
-        try {
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${user.token}`,
-                },
-            };
+  const fetchChats = async () => {
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
 
-            const response = await fetch('http://localhost:5000/chat', config);
-            const data = await response.json();
+      const response = await fetch('http://localhost:5000/chat', config);
+      const data = await response.json();
+      setChats(data);
+    } catch (error) {
+      toast({
+        title: 'Error Occurred!',
+        description: 'Failed to load chats',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+    }
+  };
 
-            console.log(data)
+  useEffect(() => {
+    setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
+    fetchChats();
+  }, [fetchAgain]);
 
-            setChats(data);
-        } catch (error) {
-            toast({
-                title: 'Error Occurred!',
-                description: 'Failed to load chats',
-                status: 'error',
-                duration: 5000,
-                isClosable: true,
-                position: 'bottom-left',
-            });
-        }
-    };
-
-    useEffect(() => {
-        setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
-        fetchChats();
-      }, []);
-
-    return (
-        <Box
-      d={{ base: selectedChat ? "none" : "flex", md: "flex" }}
+  return (
+    <Box
+      display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
       flexDir="column"
       alignItems="center"
       p={3}
@@ -57,22 +55,24 @@ const Chats = () => {
         px={3}
         fontSize={{ base: "28px", md: "30px" }}
         fontFamily="Work sans"
-        d="flex"
+        display="flex"
         w="100%"
         justifyContent="space-between"
         alignItems="center"
       >
         My Chats
+        <GroupChat>
           <Button
-            d="flex"
+            display="flex"
             fontSize={{ base: "17px", md: "10px", lg: "17px" }}
             rightIcon={<AddIcon />}
           >
             New Group Chat
           </Button>
+        </GroupChat>
       </Box>
       <Box
-        d="flex"
+        display="flex"
         flexDir="column"
         p={3}
         bg="#F8F8F8"
@@ -85,6 +85,7 @@ const Chats = () => {
           <Stack overflowY="scroll">
             {chats.map((chat) => (
               <Box
+                key={chat._id}
                 onClick={() => setSelectedChat(chat)}
                 cursor="pointer"
                 bg={selectedChat === chat ? "#38B2AC" : "#E8E8E8"}
@@ -92,7 +93,6 @@ const Chats = () => {
                 px={3}
                 py={2}
                 borderRadius="lg"
-                key={chat._id}
               >
                 <Text>
                   {!chat.isGroupChat

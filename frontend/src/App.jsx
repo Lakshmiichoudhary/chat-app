@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
-import ChatPage from './components/pages/ChatPage';
 import Error from './utils/Error';
+import ChatPage from './components/ChatBox/ChatPage';
 
 const App = () => {
  

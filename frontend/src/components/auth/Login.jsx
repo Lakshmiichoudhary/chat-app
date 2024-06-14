@@ -24,13 +24,13 @@ const Login = () => {
       });
 
       const data = await response.json();
-      console.log(data)
+      //console.log(data)
       if (!response.ok) {
         throw new Error(data.message || "Login failed");
       }
 
       localStorage.setItem('userInfo', JSON.stringify(data));
-      console.log("user",data)
+      //console.log("user",data)
       navigate("/chat");
     } catch (error) {
       console.error("Login error:", error);

@@ -15,7 +15,7 @@ const ChatProvider = ({ children }) => {
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     setUser(userInfo);
-    console.log("User data:", userInfo);
+    //console.log("User data:", userInfo);
     if (!userInfo && location.pathname !== "/signup" && location.pathname !== "/") {
       navigate("/signup");
     }
