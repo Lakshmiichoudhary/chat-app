@@ -6,6 +6,7 @@ const cors = require("cors")
 //routes
 const userRoute = require("./router/userRoute")
 const chatRoute = require("./router/chatRoute")
+const messageRoute = require("./router/messageRoute")
 
 require("dotenv").config();
 connectDB();
@@ -19,6 +20,7 @@ app.use(cors())
 
 app.use("/user",userRoute);
 app.use("/chat",chatRoute);
+app.use("/message",messageRoute);
 
 app.use(notFound);
 app.use(errorHandler);
